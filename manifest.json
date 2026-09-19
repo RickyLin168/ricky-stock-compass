@@ -1,7 +1,7 @@
 {
   "name": "Ricky 台股羅盤",
   "short_name": "台股羅盤",
-  "description": "Ricky 的台股市場羅盤、AI 散熱與 AI Server 觀察儀表板",
+  "description": "Ricky 台股羅盤 v0.3：TWSE 官方資料接入版",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,74 +1,102 @@
-const market=[
- {name:'加權指數',value:'46,280',change:0.62},
- {name:'台指期近月',value:'46,210',change:0.48},
- {name:'台積電 2330',value:'2,185',change:0.46},
- {name:'NASDAQ',value:'24,860',change:0.31},
- {name:'費城半導體',value:'8,140',change:-0.21},
- {name:'台積電 ADR',value:'386.4',change:0.54},
- {name:'美元 / 台幣',value:'30.18',change:0.05},
- {name:'美債 10Y',value:'4.94%',change:null,note:'風險觀察'},
- {name:'布蘭特油價',value:'102.0',change:-1.12},
- {name:'VIX',value:'18.6',change:-2.05}
+const FALLBACK_MARKET=[
+ {id:'TAIEX',name:'加權指數',value:'—',change:null,status:'等待資料'},
+ {id:'TX',name:'台指期近月',value:'—',change:null,status:'待接期交所'},
+ {id:'2330',name:'台積電 2330',value:'—',change:null,status:'證交所'},
+ {id:'NASDAQ',name:'NASDAQ',value:'—',change:null,status:'待接國際源'},
+ {id:'SOX',name:'費城半導體',value:'—',change:null,status:'待接國際源'},
+ {id:'TSM',name:'台積電 ADR',value:'—',change:null,status:'待接國際源'},
+ {id:'TWD',name:'美元 / 台幣',value:'—',change:null,status:'待接匯率源'},
+ {id:'US10Y',name:'美債 10Y',value:'—',change:null,status:'待接國際源'},
+ {id:'BRENT',name:'布蘭特油價',value:'—',change:null,status:'待接國際源'},
+ {id:'VIX',name:'VIX',value:'—',change:null,status:'待接國際源'}
 ];
 
 const groups={
- cooling:[
-  {name:'奇鋐',code:'3017',tag:'散熱核心',state:'strong'},
-  {name:'健策',code:'3653',tag:'高階散熱',state:''},
-  {name:'雙鴻',code:'3324',tag:'液冷',state:''},
-  {name:'高力',code:'8996',tag:'熱交換',state:''}
- ],
- server:[
-  {name:'緯穎',code:'6669',tag:'AI Server',state:'strong'},
-  {name:'緯創',code:'3231',tag:'ODM',state:''},
-  {name:'廣達',code:'2382',tag:'AI Server',state:''},
-  {name:'鴻海',code:'2317',tag:'AI / 雲端',state:''}
- ],
- watch:[
-  {name:'台積電',code:'2330',tag:'權值核心',state:'strong'},
-  {name:'奇鋐',code:'3017',tag:'散熱',state:''},
-  {name:'緯穎',code:'6669',tag:'伺服器',state:''},
-  {name:'聯發科',code:'2454',tag:'IC設計',state:''}
- ]
+ cooling:[['奇鋐','3017','散熱核心'],['健策','3653','高階散熱'],['雙鴻','3324','液冷'],['高力','8996','熱交換']],
+ server:[['緯穎','6669','AI Server'],['緯創','3231','ODM'],['廣達','2382','AI Server'],['鴻海','2317','AI / 雲端']],
+ watch:[['台積電','2330','權值核心'],['奇鋐','3017','散熱'],['緯穎','6669','伺服器'],['聯發科','2454','IC設計']]
 };
+let market=structuredClone(FALLBACK_MARKET), twseMap=new Map(), lastUpdate=null;
 
-function cls(n){return n>0?'up':n<0?'down':'flat'}
-function pct(n){return n==null?'':`${n>0?'+':''}${n.toFixed(2)}%`}
+const n=v=>{const x=Number(String(v??'').replaceAll(',',''));return Number.isFinite(x)?x:null}
+const fmt=v=>v==null?'—':Number(v).toLocaleString('en-US',{maximumFractionDigits:2});
+const pct=v=>v==null?'—':`${v>0?'+':''}${v.toFixed(2)}%`;
+const cls=v=>v>0?'up':v<0?'down':'flat';
+
+function normalizeTwse(r){
+ const code=r.Code??r.code??r.證券代號;
+ const name=r.Name??r.name??r.證券名稱;
+ const close=n(r.ClosingPrice??r.close??r.收盤價);
+ const change=n(r.Change??r.change??r.漲跌價差);
+ const prev=(close!=null&&change!=null)?close-change:null;
+ const changePct=(prev&&change!=null)?change/prev*100:null;
+ return {code,name,close,change,changePct};
+}
+
+async function fetchTWSE(){
+ const res=await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL',{cache:'no-store'});
+ if(!res.ok) throw new Error(`TWSE ${res.status}`);
+ const rows=await res.json();
+ twseMap=new Map(rows.map(normalizeTwse).filter(x=>x.code).map(x=>[x.code,x]));
+ const t=twseMap.get('2330');
+ if(t){const m=market.find(x=>x.id==='2330');m.value=fmt(t.close);m.change=t.changePct;m.status='TWSE 收盤資料'}
+ lastUpdate=new Date();
+}
+
+function stockCard([name,code,tag]){
+ const x=twseMap.get(code);
+ const price=x?fmt(x.close):'—', change=x?pct(x.changePct):'等待資料';
+ return `<div class="stock ${x?.changePct>1?'strong':''}">
+ <span class="tag">${tag}</span><b>${name}</b><small>${code}</small>
+ <div style="margin-top:8px;font-size:16px;font-weight:700">${price}</div>
+ <em class="${cls(x?.changePct)}">${change}</em></div>`;
+}
 function render(){
- document.querySelector('#market').innerHTML=market.map(x=>`<div class="tile"><small>${x.name}</small><b>${x.value}</b><span class="${cls(x.change)}">${x.change==null?x.note:pct(x.change)}</span></div>`).join('');
- for(const [id,list] of Object.entries(groups)){
-  document.querySelector('#'+id).innerHTML=list.map(x=>`<div class="stock ${x.state}"><span class="tag">${x.tag}</span><b>${x.name}</b><small>${x.code}</small><br><em>支撐 · 量價 · 籌碼</em></div>`).join('');
- }
+ document.querySelector('#market').innerHTML=market.map(x=>`<div class="tile"><small>${x.name}</small><b>${x.value}</b><span class="${cls(x.change)}">${x.change==null?x.status:pct(x.change)}</span></div>`).join('');
+ Object.entries(groups).forEach(([id,list])=>document.querySelector('#'+id).innerHTML=list.map(stockCard).join(''));
  document.querySelector('#watchCount').textContent=`${groups.watch.length} 檔`;
- compass();
- brief();
+ compass(); brief();
+ const mode=document.querySelector('#mode');
+ mode.textContent=lastUpdate?'● TWSE':'● CONNECTING';
+ mode.className='live';
 }
 function compass(){
- const eq=market[0].change??0, fut=market[1].change??0, tsmc=market[2].change??0, sox=market[4].change??0, vix=market[9].change??0;
- const trend=Math.max(0,Math.min(100,50+(eq+fut+tsmc+sox)*12));
- const chips=Math.max(0,Math.min(100,50+(tsmc+fut)*10));
- const risk=Math.max(0,Math.min(100,50-vix*4-(market[7].value.startsWith('5')?8:0)));
- const valuation=61;
+ const valid=market.filter(x=>x.change!=null);
+ const tsmc=market.find(x=>x.id==='2330')?.change;
+ if(valid.length<2){
+  document.querySelector('#signal').textContent='資料建置中';
+  document.querySelector('#arrow').textContent='→';
+  document.querySelector('#scores').textContent='台股個股已接 TWSE；完整羅盤等待其他市場資料';
+  return;
+ }
+ const avg=valid.reduce((s,x)=>s+x.change,0)/valid.length;
+ const trend=Math.max(0,Math.min(100,50+avg*20));
+ const chips=tsmc==null?50:Math.max(0,Math.min(100,50+tsmc*15));
+ const risk=50, valuation=50;
  const total=trend*.4+chips*.25+risk*.2+valuation*.15;
  let signal='震盪 · 等待方向',arrow='→';
- if(total>=65){signal='偏多 · 留意震盪';arrow='↗'}
- if(total<45){signal='偏空 · 優先控風險';arrow='↘'}
+ if(total>=60){signal='偏多 · 留意震盪';arrow='↗'}
+ if(total<43){signal='偏空 · 優先控風險';arrow='↘'}
  document.querySelector('#signal').textContent=signal;
  document.querySelector('#arrow').textContent=arrow;
- document.querySelector('#scores').textContent=`趨勢 ${trend.toFixed(0)}　籌碼 ${chips.toFixed(0)}　風險 ${risk.toFixed(0)}　估值 ${valuation}`;
+ document.querySelector('#scores').textContent=`趨勢 ${trend.toFixed(0)}　籌碼 ${chips.toFixed(0)}　風險 ${risk}　估值 ${valuation}`;
 }
 function brief(){
- const items=[
-  ['權值風向','台積電與加權是否同向帶量，若背離就降低追價衝動。'],
-  ['AI 散熱','奇鋐、健策、雙鴻、高力看回測支撐後的量價反應，不只看紅綠。'],
-  ['AI Server','緯穎搭配緯創、廣達、鴻海觀察族群同步性，消息面要和成交量一起驗證。'],
-  ['外部風險','美債 10Y、油價、VIX 與美元/台幣一起看，避免只被單一指標牽著走。']
- ];
- document.querySelector('#brief').innerHTML=items.map(x=>`<div class="brief-item"><b>${x[0]}：</b>${x[1]}</div>`).join('');
+ const stamp=lastUpdate?lastUpdate.toLocaleString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'尚未取得';
+ document.querySelector('#brief').innerHTML=`
+ <div class="brief-item"><b>資料狀態：</b>台股上市個股已改接臺灣證券交易所 OpenAPI。最後讀取：${stamp}</div>
+ <div class="brief-item"><b>AI 散熱：</b>奇鋐、健策、雙鴻、高力會直接顯示證交所最近一個交易日收盤價與漲跌幅。</div>
+ <div class="brief-item"><b>AI Server：</b>緯穎、緯創、廣達、鴻海同步接入，不再使用手填假價格。</div>
+ <div class="brief-item"><b>下一階段：</b>台指期與國際市場需要另一個資料層；未接上前顯示「待接」，不拿假數字冒充即時行情。</div>`;
 }
-function toast(s){const t=document.querySelector('#toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
-document.querySelector('#refresh').onclick=()=>{render();toast('已重新計算羅盤 🧭')};
-document.querySelector('#mode').onclick=()=>toast('目前為 DEMO 示意資料');
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(b.dataset.tab==='home'?'首頁':b.querySelector('span').textContent+'功能下一版接上')});
-render();
+function toast(s){const t=document.querySelector('#toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+async function update(){
+ document.querySelector('#mode').textContent='● UPDATING';
+ try{await fetchTWSE();render();toast('TWSE 資料更新完成 🧭')}
+ catch(e){console.error(e);render();toast('TWSE 暫時讀不到，保留安全空值')}
+}
+document.querySelector('#refresh').onclick=update;
+document.querySelector('#mode').onclick=()=>toast(lastUpdate?'台股來源：TWSE OpenAPI':'正在等待 TWSE 資料');
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(b.dataset.tab==='home'?'首頁':b.querySelector('span').textContent+'下一版繼續開通')});
+render(); update();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
