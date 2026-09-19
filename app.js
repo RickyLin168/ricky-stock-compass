@@ -34,7 +34,7 @@ function normalizeTwse(r){
 }
 
 async function fetchTWSE(){
- const res=await fetch('https://ricky-stock-api.y28rf5d2rv.workers.dev');
+ const res=await fetch('https://ricky-stock-api-v2.y28rf5d2rv.workers.dev');
  if(!res.ok) throw new Error(`TWSE ${res.status}`);
  const data=await res.json();
  const rows=data.stocks||[];
