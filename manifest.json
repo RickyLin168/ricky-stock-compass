@@ -1,0 +1,12 @@
+{
+  "name": "Ricky 台股羅盤",
+  "short_name": "台股羅盤",
+  "description": "Ricky 的台股市場羅盤、AI 散熱與 AI Server 觀察儀表板",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#060a11",
+  "theme_color": "#080d16",
+  "lang": "zh-Hant",
+  "orientation": "portrait"
+}

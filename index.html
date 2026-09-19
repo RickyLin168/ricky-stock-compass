@@ -1,10 +1,54 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080d16"><title>Ricky 台股羅盤</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css"></head><body>
-<header><div><small>RICKY STOCK COMPASS</small><h1>台股羅盤 🧭</h1></div><span class="live">● DEMO</span></header>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080d16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ricky 台股羅盤</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div><small>RICKY STOCK COMPASS</small><h1>台股羅盤 🧭</h1></div>
+  <button id="mode" class="live">● DEMO</button>
+</header>
 <main>
-<section class="hero card"><div><small>市場羅盤</small><h2 id="signal">偏多 · 留意震盪</h2><p>趨勢 72　籌碼 58　風險 46　估值 61</p></div><div class="compass"><b>北</b><span>趨勢</span><strong>↗</strong></div></section>
-<h3>市場溫度</h3><section class="grid" id="market"></section>
-<h3>AI 散熱雷達 🔥</h3><section class="stocks" id="cooling"></section>
-<h3>AI Server 雷達 🖥️</h3><section class="stocks" id="server"></section>
-<h3>自選股 ⭐</h3><section class="stocks" id="watch"></section>
-<section class="card war"><small>🤖 夥伴戰情室</small><h2>今天值得關注</h2><p>① 台積電與權值股是否帶量。<br>② AI 散熱回測支撐後的量價反應。<br>③ 緯穎相關消息與 AI Server 族群同步性。</p><div class="note">✎ v0.1 先把駕駛艙蓋好，行情 API 下一階段接上 😎</div></section>
-</main><nav><button class="active">⌂<span>首頁</span></button><button>☆<span>自選股</span></button><button>✦<span>AI助手</span></button><button>▤<span>筆記</span></button></nav><script src="app.js"></script></body></html>
+<section class="hero card">
+  <div><small>市場羅盤</small><h2 id="signal">計算中…</h2><p id="scores"></p></div>
+  <div class="compass"><b id="north">北</b><span>趨勢</span><strong id="arrow">↗</strong></div>
+</section>
+
+<div class="section-title"><h3>市場溫度</h3><button id="refresh">↻ 更新</button></div>
+<section class="grid" id="market"></section>
+
+<div class="section-title"><h3>AI 散熱雷達 🔥</h3><span>核心觀察</span></div>
+<section class="stocks" id="cooling"></section>
+
+<div class="section-title"><h3>AI Server 雷達 🖥️</h3><span>核心觀察</span></div>
+<section class="stocks" id="server"></section>
+
+<div class="section-title"><h3>自選股 ⭐</h3><span id="watchCount"></span></div>
+<section class="stocks" id="watch"></section>
+
+<section class="card war">
+  <small>🤖 夥伴戰情室</small>
+  <h2>今天值得關注</h2>
+  <div id="brief"></div>
+  <div class="note">✎ v0.2：羅盤會依畫面資料自動計分。現在仍是示意行情，下一階段才接即時資料源。</div>
+</section>
+</main>
+
+<nav>
+<button class="active" data-tab="home">⌂<span>首頁</span></button>
+<button data-tab="watch">☆<span>自選股</span></button>
+<button data-tab="ai">✦<span>AI助手</span></button>
+<button data-tab="notes">▤<span>筆記</span></button>
+</nav>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
