@@ -34,9 +34,10 @@ function normalizeTwse(r){
 }
 
 async function fetchTWSE(){
- const res=await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL',{cache:'no-store'});
+ const res=await fetch('https://ricky-stock-api.y28rf5d2rv.workers.dev');
  if(!res.ok) throw new Error(`TWSE ${res.status}`);
- const rows=await res.json();
+ const data=await res.json();
+ const rows=data.stocks||[];
  twseMap=new Map(rows.map(normalizeTwse).filter(x=>x.code).map(x=>[x.code,x]));
  const t=twseMap.get('2330');
  if(t){const m=market.find(x=>x.id==='2330');m.value=fmt(t.close);m.change=t.changePct;m.status='TWSE 收盤資料'}
