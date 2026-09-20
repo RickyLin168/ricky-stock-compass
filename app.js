@@ -38,6 +38,14 @@ async function fetchTWSE(){
  if(!res.ok) throw new Error(`TWSE ${res.status}`);
  const data=await res.json();
  const rows=data.stocks||[];
+ const marketRows=data.market||[];
+marketRows.forEach(q=>{
+  const m=market.find(x=>x.id===q.id);
+  if(m&&q.value!=null){
+    m.value=q.value;
+    m.change=q.change;
+  }
+});
  twseMap=new Map(rows.map(normalizeTwse).filter(x=>x.code).map(x=>[x.code,x]));
  const t=twseMap.get('2330');
  if(t){const m=market.find(x=>x.id==='2330');m.value=fmt(t.close);m.change=t.changePct;m.status='TWSE 收盤資料'}
