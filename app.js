@@ -108,4 +108,5 @@ document.querySelector('#refresh').onclick=update;
 document.querySelector('#mode').onclick=()=>toast(lastUpdate?'台股來源：TWSE OpenAPI':'正在等待 TWSE 資料');
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(b.dataset.tab==='home'?'首頁':b.querySelector('span').textContent+'下一版繼續開通')});
 render(); update();
+setInterval(update,60000);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
