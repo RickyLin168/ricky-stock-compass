@@ -1,4 +1,4 @@
-const C='ricky-compass-v03';
+const C='ricky-compass-v04';
 const F=['./','./index.html','./style.css','./app.js','./manifest.json'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(F)))});
 self.addEventListener('activate',e=>{e.waitUntil(Promise.all([caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))),self.clients.claim()]))});
