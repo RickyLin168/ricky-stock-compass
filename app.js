@@ -109,4 +109,5 @@ document.querySelector('#mode').onclick=()=>toast(lastUpdate?'台股來源：TWS
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(b.dataset.tab==='home'?'首頁':b.querySelector('span').textContent+'下一版繼續開通')});
 render(); update();
 setInterval(update,60000);
+fetch("https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_2330.tw&json=1&delay=0").then(r=>r.text()).then(x=>console.log("MIS2330",x)).catch(e=>console.log("MIS_ERR",e));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
